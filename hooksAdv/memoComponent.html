@@ -6,7 +6,7 @@
 
 <div id="root"></div>
 <script type="text/babel">
-  const { useState, useEffect, useMemo } = React;
+  const { useState, useEffect, useMemo , memo } = React; //memo是單純的方法，作為元件渲染使用
   const sampleData = [
     {
       id: 1,
@@ -44,25 +44,47 @@
       price: 120,
     },
   ];
+  
+  //被改成為 Props 更新時，才重新渲染filterProducts元件
+  const DataTable = memo(({filterProducts}) => {
+    console.log("DataTable已經被渲染");
+    return(
+      <table className='table'>
+        <tbody>
+          {filterProducts.map((product) => {
+            return (
+              <tr key={product.id}>
+                <td>{product.title}</td>
+                <td>{product.price}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    )
+  })
 
   let num = 0;
   const App = () => {
     const [products, setProducts] = useState(sampleData);
     const [ascending, setAscending] = useState(true);
     const [search, setSearch] = useState('');
+    const [text , setText] = useState('');
 
     const filterProducts = useMemo(() => {
       return [...products]
-        .filter((product) => {
-          return product.title.match(search);
-        })
-        .sort((a, b) => {
+        .filter((product) => product.title.match(search))  //利用原本的[]當依據，新增一個[]
+        .sort((a, b) => { //排序
           return ascending ? a.price - b.price : b.price - a.price;
         });
     }, [ascending, search]);
 
     return (
       <>
+      <input type="text" value={text}
+          onChange={(e) => setText(e.target.value)}
+      />
+        <br/>
         升降冪：
         <input
           type='checkbox'
@@ -77,18 +99,7 @@
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <table className='table'>
-          <tbody>
-            {filterProducts.map((product) => {
-              return (
-                <tr key={product.id}>
-                  <td>{product.title}</td>
-                  <td>{product.price}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <DataTable filterProducts={filterProducts}/>
       </>
     );
   };
